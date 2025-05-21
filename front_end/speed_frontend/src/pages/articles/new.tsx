@@ -33,19 +33,43 @@ const NewDiscussion = () => {
   };
 
   const submitNewArticle = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    console.log(
-      JSON.stringify({
-        title,
-        authors,
-        source,
-        publication_year: pubYear,
-        doi,
-        summary,
-        linked_discussion: linkedDiscussion,
-      })
-    );
+  event.preventDefault();
+
+  const payload = {
+    entryType: "article", 
+    citationKey: title.toLowerCase().replace(/\s+/g, "_"), 
+    entryTags: {
+      title,
+      author: authors.join(" and "),
+      journal: source,
+      year: pubYear.toString(),
+      doi,
+      abstract: summary,
+      linked_discussion: linkedDiscussion,
+    },
   };
+
+  try {
+    const res = await fetch("http://localhost:3001/bibtex", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify([payload]), 
+    });
+
+    if (res.ok) {
+      alert("Upload successful!");
+    } else {
+      const error = await res.json();
+      console.error("Upload failed:", error);
+      alert("Upload failed.");
+    }
+  } catch (error) {
+    console.error("Request error:", error);
+    alert("Server error.");
+  }
+};
 
   // Some helper methods for the authors array
   const addAuthor = () => {
